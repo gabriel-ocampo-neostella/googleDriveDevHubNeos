@@ -1,0 +1,381 @@
+<template>
+    <lightning-card>
+        <!-- Header Section with Create and Upload Options -->
+        <div class="slds-grid slds-p-around_medium">
+            <!-- Create New Section with Google Drive Icon -->
+            <div class="slds-grid slds-grid_vertical-align-center">
+
+                <!-- Wrapper with onclick for Google Drive Navigation Icon -->
+                <div onclick={handleOpenGoogleDrive} class="slds-m-right_small icon-hover" style="cursor: pointer;">
+                    <svg class="slds-icon slds-icon-text-default" style="width: 60px; height: 60px;" aria-hidden="true">
+                        <!-- Correctly referencing the sprite using the concatenated URL -->
+                        <use xlink:href={customIconsUrl}></use>
+                    </svg>
+                </div>
+
+                <!-- Label "Create New" next to Google Drive Icon -->
+                <span class="slds-text-heading_small slds-m-right_small">Create New:</span>
+
+
+                <!-- Create Document Wizard -->
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gdoc"
+                    alternative-text="Create Document Wizard" title="Create Document Wizard"
+                    onclick={openDocumentWizard} size="large">
+                </lightning-icon>
+
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gsheet"
+                    alternative-text="Create Sheets file" title="Create Sheets File"
+                    onclick={openDocumentspreadsheetWizard} size="large">
+                </lightning-icon>
+
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gpres"
+                    alternative-text="Create Sheets file" title="Create Sheets File"
+                    onclick={openDocumentpresentationWizard} size="large">
+                </lightning-icon>
+
+                <!-- Create Folder Icon -->
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:folder"
+                    alternative-text="Create Folder" title="Create Folder" onclick={showCreateFolderModal} size="large">
+                </lightning-icon>
+
+                <!-- Create New File Icons with added margins -->
+                <!--<lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gdoc"
+                    alternative-text="Create Docs file" title="Create Docs" onclick={showCreateDocsModal} size="large">
+                </lightning-icon>
+
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gsheet"
+                    alternative-text="Create Sheets file" title="Create Sheets File" onclick={showCreateFileModal}
+                    size="large">
+                </lightning-icon>
+
+                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gpres"
+                    alternative-text="Create Slides file" title="Create Slides" onclick={showCreateSlidesModal}
+                    size="large">
+                </lightning-icon>-->
+
+            </div>
+
+            <!-- Upload Button with Icon inside -->
+            <div class="slds-grid slds-grid_vertical-align-center slds-m-left_small">
+
+                <button class="custom-upload-button" onclick={openUploadModal}>
+                    <lightning-icon icon-name="utility:upload" alternative-text="Upload" size="x-small"
+                        class="slds-m-right_xx-small"></lightning-icon>
+                    Upload Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Horizontal Line Separator -->
+        <hr class="slds-m-horizontal_medium slds-m-top_small slds-m-bottom_small" />
+
+        <!-- Breadcrumb Navigation with Refresh Icon on the right -->
+        <div class="slds-grid slds-p-around_medium slds-grid_align-spread">
+            <div class="slds-grid breadcrumbs">
+                <template for:each={breadcrumbs} for:item="breadcrumb" for:index="index">
+                    <div class="breadcrumb-item" key={breadcrumb.id}>
+                        <template if:true={index}>
+                            <lightning-icon key={breadcrumb.separatorKey} icon-name="utility:chevronright"
+                                alternative-text="Separator" size="xx-small"
+                                class="slds-m-horizontal_xx-small breadcrumb-separator icon-aligned"></lightning-icon>
+                        </template>
+                        <lightning-button key={breadcrumb.id} variant="base" label={breadcrumb.name}
+                            data-id={breadcrumb.id} onclick={handleBreadcrumbClick} class={breadcrumb.className}
+                            style="font-size: 1.25rem;">
+                        </lightning-button>
+                    </div>
+                </template>
+            </div>
+            <!-- Refresh Button moved to the right -->
+            <lightning-button-icon icon-name="utility:sync" alternative-text="Sync" title="Sync Files"
+                onclick={handleRefreshFiles} class="slds-button_icon slds-button_icon-inverse"></lightning-button-icon>
+        </div>
+
+        <!-- Display the list of files after successful authentication -->
+        <template if:true={googleDriveFiles}>
+
+
+            <div class="slds-p-around_medium">
+
+                <template if:true={googleDriveFiles.length}>
+                    <div class="slds-scrollable_y">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+
+
+
+                                    <!-- File Name Column -->
+                                    <th scope="col" style="width: 200px;">
+                                        <div class="slds-truncate header-hover" title="File Name" data-column="name"
+                                            onclick={handleSort} onmouseover={handleMouseOver}
+                                            onmouseout={handleMouseOut}>
+                                            <span>File Name</span>
+                                            <lightning-icon icon-name={nameSortIcon}
+                                                alternative-text="Sort by File Name" class={nameSortVisibleClass}
+                                                size="xx-small">
+                                            </lightning-icon>
+                                        </div>
+                                    </th>
+                                    <!--
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Owner">Owner</div>
+                                    </th>-->
+
+
+
+
+                                    <!-- Last Modified Column -->
+                                    <th scope="col" style="width: 200px;">
+                                        <div class="slds-truncate header-hover" title="Last Modified"
+                                            data-column="modifiedTime" onclick={handleSort}
+                                            onmouseover={handleMouseOver} onmouseout={handleMouseOut}>
+                                            <span>Last Modified</span>
+                                            <lightning-icon icon-name={modifiedSortIcon}
+                                                alternative-text="Sort by Last Modified"
+                                                class={modifiedSortVisibleClass} size="xx-small">
+                                            </lightning-icon>
+                                        </div>
+                                    </th>
+
+                                    <!-- File Size Column -->
+                                    <th scope="col" style="width: 200px;">
+                                        <div class="slds-truncate header-hover" title="File Size" data-column="size"
+                                            onclick={handleSort} onmouseover={handleMouseOver}
+                                            onmouseout={handleMouseOut}>
+                                            <span>File Size</span>
+                                            <lightning-icon icon-name={sizeSortIcon}
+                                                alternative-text="Sort by File Size" class={sizeSortVisibleClass}
+                                                size="xx-small">
+                                            </lightning-icon>
+                                        </div>
+                                    </th>
+                                    <!--
+                                    <th scope="col">
+                                        <div class="slds-truncate" title="Delete">Delete</div>
+                                    </th>-->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={googleDriveFiles} for:item="file">
+                                    <tr key={file.id}>
+                                        <td data-label="File Name">
+
+                                            <!-- Display the appropriate icon based on the file type -->
+                                            <template if:true={file.isFolder}>
+                                                <lightning-icon icon-name="doctype:folder" alternative-text="Folder"
+                                                    size="small" class="slds-m-right_small" data-id={file.id}
+                                                    data-name={file.name} data-is-folder="true"
+                                                    onclick={handleFileClick}>
+                                                </lightning-icon>
+                                            </template>
+
+                                            <template if:true={file.isGoogleDoc}>
+                                                <lightning-icon icon-name="doctype:gdoc" alternative-text="Google Docs"
+                                                    size="small" class="slds-m-right_small"></lightning-icon>
+                                            </template>
+                                            <template if:true={file.isGoogleSheet}>
+                                                <lightning-icon icon-name="doctype:gsheet"
+                                                    alternative-text="Google Sheets" size="small"
+                                                    class="slds-m-right_small"></lightning-icon>
+                                            </template>
+                                            <template if:true={file.isGoogleSlide}>
+                                                <lightning-icon icon-name="doctype:gpres"
+                                                    alternative-text="Google Slides" size="small"
+                                                    class="slds-m-right_small"></lightning-icon>
+                                            </template>
+                                            <template if:true={file.isPDF}>
+                                                <lightning-icon icon-name="doctype:pdf" alternative-text="PDF"
+                                                    size="small" class="slds-m-right_small"></lightning-icon>
+                                            </template>
+
+
+
+
+                                            <!-- Display the file or folder name -->
+                                            <span class="slds-truncate" title={file.name} data-id={file.id}
+                                                data-name={file.name} data-is-folder={file.isFolder}
+                                                onclick={handleFileClick}>
+                                                {file.name}
+                                            </span>
+                                        </td>
+                                        <!--
+                                        <td data-label="Owner">
+                                            <span class="slds-truncate" title={file.owners}>{file.owners}</span>
+                                        </td> -->
+                                        <td data-label="Last Modified">
+                                            <span class="slds-truncate"
+                                                title={file.modifiedTime}>{file.formattedModifiedTime}</span>
+                                        </td>
+                                        <td data-label="File Size">
+                                            <span class="slds-truncate" title={file.size}>{file.formattedSize}</span>
+                                        </td>
+
+                                        <!--
+
+                                        <td data-label="Delete">
+                                            <lightning-icon icon-name="utility:delete" alternative-text="Delete"
+                                                size="small"
+                                                class="slds-icon slds-icon_x-small slds-m-right_small delete-icon"
+                                                onclick={handleDeleteFile} data-id={file.id}
+                                                title="Delete"></lightning-icon>
+                                        </td>-->
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+                <template if:false={googleDriveFiles.length}>
+                    <p>No files found in Google Drive.</p>
+                </template>
+            </div>
+        </template>
+
+    </lightning-card>
+
+
+    <!-- Modal for creating a new Sheets file -->
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Create New Google Sheets File</h2>
+                </header>
+
+                <!-- Modal/Popup Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input data-id="fileNameInput" label="File Name" value={newFileName}
+                        onchange={handleFileNameChange} required message-when-value-missing="Please enter a file name.">
+                    </lightning-input>
+                </div>
+
+                <!-- Modal/Popup Footer -->
+                <footer class="slds-modal__footer">
+                    <!-- Add margin to separate the Cancel button from the Create File button -->
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}
+                        class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label="Create File" onclick={createNewSheetsFile}
+                        disabled={isCreateDisabled}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Modal for Creating a New Folder -->
+    <template if:true={isCreateFolderModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeCreateFolderModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Create New Folder</h2>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input data-id="folderNameInput" label="Folder Name" value={newFolderName}
+                        onchange={handleFolderNameChange} required
+                        message-when-value-missing="Please enter a folder name.">
+                    </lightning-input>
+                </div>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeCreateFolderModal}
+                        class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label="Create Folder" onclick={createNewFolder}
+                        disabled={isCreateFolderDisabled}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+
+    <!-- Modal Popup for DocumentWizard -->
+    <template if:true={isDocumentWizardOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Popup Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeDocumentWizard}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Create or Clone Document</h2>
+                </header>
+
+                <!-- DocumentWizard component with folderId passed as a parameter -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-document-wizard folder-id={currentFolderId} mime-type={selectedMimeType}
+                        ondocumentcreated={handleDocumentCreated}></c-document-wizard>
+                </div>
+
+                <!-- Modal/Popup Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeDocumentWizard}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Modal for file upload -->
+    <template if:true={isUploadModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closeUploadModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close"
+                            size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Upload Files</h2>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- File input for upload -->
+                    <lightning-input type="file" label="Select a file to upload"
+                        onchange={handleFileChange}></lightning-input>
+
+                    <!-- Progress Bar for showing the upload progress -->
+                    <template if:true={isFileSelected}>
+                        <div class="slds-m-top_medium">
+                            <p>Selected File: {selectedFileName}</p>
+                            <lightning-progress-bar value={uploadProgress}></lightning-progress-bar>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeUploadModal}></lightning-button>
+                    <lightning-button variant="brand" label="Upload" onclick={handleUploadFile}
+                        disabled={isUploadDisabled}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+
+</template>

@@ -1,0 +1,80 @@
+/* Archivo: recordGoogleDriveFiles.css */
+.delete-icon {
+    transition: transform 0.3s ease, color 0.3s ease;
+    /* Añadir transición para el cambio suave */
+}
+
+.delete-icon:hover {
+    transform: scale(1.2);
+    /* Aumenta el tamaño del icono al pasar el mouse */
+    color: #d32f2f;
+    /* Cambia el color del icono al pasar el mouse */
+}
+
+/* Style to scale icons when hovered */
+.icon-hover {
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Scale the icon on hover */
+.icon-hover:hover {
+    transform: scale(1.2);
+    cursor: pointer;
+    /* Adjust the scale factor as needed */
+}
+
+.custom-upload-button {
+    background-color: #f4f4f4;
+    /* Light gray background */
+    border: 1px solid #b0b0b0;
+    /* Border with gray color */
+    border-radius: 4px;
+    /* Rounded corners */
+    padding: 8px 16px;
+    /* Padding for size and spacing */
+    font-size: 14px;
+    /* Font size to match the image */
+    color: #333;
+    /* Text color */
+    cursor: pointer;
+    /* Cursor changes to pointer on hover */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Light shadow for depth */
+    transition: background-color 0.3s, box-shadow 0.3s;
+    /* Smooth transition on hover */
+}
+
+.custom-upload-button:hover {
+    background-color: #e0e0e0;
+    /* Slightly darker gray on hover */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    /* Enhanced shadow on hover */
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    /* Vertically centers items inside the flex container */
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    /* Vertically centers items inside the flex container */
+}
+
+.icon-aligned {
+    display: inline-flex;
+    align-items: center;
+    /* Ensures the icon itself is centered vertically */
+}
+
+.icon-hover-effect {
+    margin-left: 5px;
+    filter: brightness(0) saturate(100%) invert(28%) sepia(89%) saturate(5178%) hue-rotate(176deg) brightness(94%) contrast(102%);
+    cursor: pointer;
+}
+
+.header-hover {
+    cursor: pointer;
+}

@@ -1,0 +1,118 @@
+<template>
+    <!-- Step 1: Choose between Create New Document or Use Template -->
+    <template if:true={isStepOne}>
+        <h2 class="slds-text-heading_medium slds-text-align_center">Choose an option</h2>
+        <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-grid_align-center slds-m-around_medium">
+
+            <!-- Create New Document Card -->
+            <div class="slds-col slds-size_1-of-2 slds-p-around_small" data-id="newDocument" onclick={handleCardClick}>
+                <div class={createNewDocumentClass} style="min-height: 250px;">
+                    <lightning-card title="Create New Document" icon-name="doctype:document">
+                        <div class="slds-p-horizontal_small slds-text-align_center card-content">
+                            <p class="slds-text-body_regular">Create a blank document from scratch by providing a name.
+                                This will create a fresh document in the selected folder.</p>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+
+            <!-- Create from Template Card -->
+            <div class="slds-col slds-size_1-of-2 slds-p-around_small" data-id="fromTemplate" onclick={handleCardClick}>
+                <div class={createFromTemplateClass} style="min-height: 250px;">
+                    <lightning-card title="Create from Template" icon-name="doctype:template">
+                        <div class="slds-p-horizontal_small slds-text-align_center card-content">
+                            <p class="slds-text-body_regular">Select a document template to create a copy of an existing
+                                file in Google Drive. You will name the new file and it will be cloned from the
+                                template.
+                            </p>
+                        </div>
+                    </lightning-card>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer with Next and Cancel Buttons -->
+        <div class="slds-text-align_center slds-m-top_medium">
+            <lightning-button label="Next" variant="brand" onclick={handleNextStep}
+                disabled={isSelectDisabled}></lightning-button>
+        </div>
+    </template>
+
+    <!-- Step 2A: Create New Document -->
+    <template if:true={isStepTwoNewDocument}>
+        <lightning-card>
+            <h2 class="slds-text-heading_medium">Enter Document Name</h2>
+            <lightning-input label="Document Name" value={newDocumentName} data-id="newDocumentInput"
+                onchange={handleDocumentNameChange} required message-when-value-missing="Please enter a document name.">
+            </lightning-input>
+            <!-- Spinner visibility controlled by isLoading -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Creating document..." size="medium"></lightning-spinner>
+            </template>
+            <div class="slds-grid slds-wrap slds-m-top_medium">
+                <lightning-button label="Back" onclick={goBackToStepOne} class="slds-m-right_medium"
+                    variant="neutral"></lightning-button>
+                <lightning-button label="Create" onclick={createNewDocument} class="slds-m-right_medium" variant="brand"
+                    disabled={isCreateDisabled}></lightning-button>
+            </div>
+        </lightning-card>
+    </template>
+
+    <!-- Step 2B: Select Template -->
+    <template if:true={isStepTwoTemplate}>
+        <lightning-card>
+            <h2 class="slds-text-heading_medium">Select a Template</h2>
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                    <tr>
+                        <th scope="col"><span>Select</span></th>
+                        <th scope="col"><span>File Name</span></th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={templateFiles} for:item="file">
+                        <tr key={file.id}>
+                            <td data-label="Select">
+                                <lightning-input type="radio" name="template" value={file.id}
+                                    onchange={selectTemplate}></lightning-input>
+                            </td>
+                            <td data-label="File Name">
+                                <span class="slds-truncate" title={file.name}>{file.name}</span>
+                            </td>
+
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+
+            <div class="slds-grid slds-wrap slds-m-top_medium">
+                <lightning-button label="Back" onclick={goBackToStepOne} class="slds-m-right_medium"
+                    variant="neutral"></lightning-button>
+                <lightning-button label="Next" onclick={goToNamingStep} class="slds-m-right_medium" variant="brand"
+                    disabled={isTemplateDisabled}></lightning-button>
+            </div>
+        </lightning-card>
+    </template>
+    <!-- Step 3: Name the Cloned Document -->
+    <template if:true={isStepThreeNaming}>
+        <lightning-card>
+            <h2 class="slds-text-heading_medium">Enter Cloned Document Name</h2>
+            <lightning-input label="Document Name" value={clonedDocumentName} data-id="clonedDocumentInput"
+                onchange={handleClonedDocumentNameChange} required
+                message-when-value-missing="Please enter a document name.">
+            </lightning-input>
+            <!-- Spinner visibility controlled by isCloneLoading -->
+            <template if:true={isCloneLoading}>
+                <lightning-spinner alternative-text="Cloning document..." size="medium"></lightning-spinner>
+            </template>
+            <div class="slds-grid slds-wrap slds-m-top_medium">
+                <lightning-button label="Back" onclick={goBackToTemplateStep} class="slds-m-right_medium"
+                    variant="neutral"></lightning-button>
+                <lightning-button label="Create" onclick={cloneDocument} class="slds-m-right_medium" variant="brand"
+                    disabled={isCloneDisabled}></lightning-button>
+
+            </div>
+        </lightning-card>
+    </template>
+</template>

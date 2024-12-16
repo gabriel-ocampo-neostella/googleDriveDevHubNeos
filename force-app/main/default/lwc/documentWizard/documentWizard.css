@@ -1,0 +1,22 @@
+.selected-card {
+    border: 2px solid blue;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 255, 0.5);
+    padding: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+.unselected-card {
+    border: 2px solid lightgray;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Hover aplicado al div con la clase dinámica */
+.unselected-card:hover {
+    border: 2px solid #0070d2;
+    /* Cambiar el borde a azul en hover */
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
