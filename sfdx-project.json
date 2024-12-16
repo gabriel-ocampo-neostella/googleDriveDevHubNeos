@@ -2,11 +2,18 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "package": "googleDriveIntegration",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT"
     }
   ],
   "name": "googleDriveDevHubNeos",
-  "namespace": "",
+  "namespace": "sfgoogledrive",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "62.0"
+  "sourceApiVersion": "62.0",
+  "packageAliases": {
+    "googleDriveIntegration": "0Hoaj0000000IGHCA2",
+    "googleDriveIntegration@0.1.0-2": "04taj0000004urdAAA"
+  }
 }
