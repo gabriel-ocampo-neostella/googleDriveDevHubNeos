@@ -1,7 +1,9 @@
 {
-  "orgName": "Demo company",
+  "orgName": "ISGDI-26 Org",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "features": [
+    "EnableSetPasswordInApi"
+  ],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
