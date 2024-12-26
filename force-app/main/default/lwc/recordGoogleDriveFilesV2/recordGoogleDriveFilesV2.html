@@ -1,5 +1,8 @@
 <template>
+
     <lightning-card>
+        <c-display-errors errors={errorMessages}></c-display-errors>
+
         <!-- Header Section with Create and Upload Options -->
         <div class="slds-grid slds-p-around_medium">
             <!-- Create New Section with Google Drive Icon -->
@@ -37,21 +40,6 @@
                 <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:folder"
                     alternative-text="Create Folder" title="Create Folder" onclick={showCreateFolderModal} size="large">
                 </lightning-icon>
-
-                <!-- Create New File Icons with added margins -->
-                <!--<lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gdoc"
-                    alternative-text="Create Docs file" title="Create Docs" onclick={showCreateDocsModal} size="large">
-                </lightning-icon>
-
-                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gsheet"
-                    alternative-text="Create Sheets file" title="Create Sheets File" onclick={showCreateFileModal}
-                    size="large">
-                </lightning-icon>
-
-                <lightning-icon class="icon-hover slds-m-right_small" icon-name="doctype:gpres"
-                    alternative-text="Create Slides file" title="Create Slides" onclick={showCreateSlidesModal}
-                    size="large">
-                </lightning-icon>-->
 
             </div>
 
@@ -93,18 +81,12 @@
 
         <!-- Display the list of files after successful authentication -->
         <template if:true={googleDriveFiles}>
-
-
             <div class="slds-p-around_medium">
-
                 <template if:true={googleDriveFiles.length}>
                     <div class="slds-scrollable_y">
                         <table class="slds-table slds-table_cell-buffer slds-table_bordered">
                             <thead>
                                 <tr class="slds-line-height_reset">
-
-
-
                                     <!-- File Name Column -->
                                     <th scope="col" style="width: 200px;">
                                         <div class="slds-truncate header-hover" title="File Name" data-column="name"
@@ -117,13 +99,6 @@
                                             </lightning-icon>
                                         </div>
                                     </th>
-                                    <!--
-                                    <th scope="col">
-                                        <div class="slds-truncate" title="Owner">Owner</div>
-                                    </th>-->
-
-
-
 
                                     <!-- Last Modified Column -->
                                     <th scope="col" style="width: 200px;">
@@ -150,10 +125,6 @@
                                             </lightning-icon>
                                         </div>
                                     </th>
-                                    <!--
-                                    <th scope="col">
-                                        <div class="slds-truncate" title="Delete">Delete</div>
-                                    </th>-->
                                 </tr>
                             </thead>
                             <tbody>
@@ -189,9 +160,6 @@
                                                     size="small" class="slds-m-right_small"></lightning-icon>
                                             </template>
 
-
-
-
                                             <!-- Display the file or folder name -->
                                             <span class="slds-truncate" title={file.name} data-id={file.id}
                                                 data-name={file.name} data-is-folder={file.isFolder}
@@ -199,10 +167,7 @@
                                                 {file.name}
                                             </span>
                                         </td>
-                                        <!--
-                                        <td data-label="Owner">
-                                            <span class="slds-truncate" title={file.owners}>{file.owners}</span>
-                                        </td> -->
+
                                         <td data-label="Last Modified">
                                             <span class="slds-truncate"
                                                 title={file.modifiedTime}>{file.formattedModifiedTime}</span>
@@ -210,16 +175,6 @@
                                         <td data-label="File Size">
                                             <span class="slds-truncate" title={file.size}>{file.formattedSize}</span>
                                         </td>
-
-                                        <!--
-
-                                        <td data-label="Delete">
-                                            <lightning-icon icon-name="utility:delete" alternative-text="Delete"
-                                                size="small"
-                                                class="slds-icon slds-icon_x-small slds-m-right_small delete-icon"
-                                                onclick={handleDeleteFile} data-id={file.id}
-                                                title="Delete"></lightning-icon>
-                                        </td>-->
                                     </tr>
                                 </template>
                             </tbody>
@@ -231,44 +186,7 @@
                 </template>
             </div>
         </template>
-
     </lightning-card>
-
-
-    <!-- Modal for creating a new Sheets file -->
-    <template if:true={isModalOpen}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <!-- Modal/Popup Header -->
-                <header class="slds-modal__header">
-                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
-                        title="Close" onclick={closeModal}>
-                        <lightning-icon icon-name="utility:close" alternative-text="close"
-                            size="small"></lightning-icon>
-                        <span class="slds-assistive-text">Close</span>
-                    </button>
-                    <h2 class="slds-text-heading_medium">Create New Google Sheets File</h2>
-                </header>
-
-                <!-- Modal/Popup Body -->
-                <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input data-id="fileNameInput" label="File Name" value={newFileName}
-                        onchange={handleFileNameChange} required message-when-value-missing="Please enter a file name.">
-                    </lightning-input>
-                </div>
-
-                <!-- Modal/Popup Footer -->
-                <footer class="slds-modal__footer">
-                    <!-- Add margin to separate the Cancel button from the Create File button -->
-                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}
-                        class="slds-m-right_small"></lightning-button>
-                    <lightning-button variant="brand" label="Create File" onclick={createNewSheetsFile}
-                        disabled={isCreateDisabled}></lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
 
     <!-- Modal for Creating a New Folder -->
     <template if:true={isCreateFolderModalOpen}>
@@ -304,7 +222,6 @@
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
-
 
     <!-- Modal Popup for DocumentWizard -->
     <template if:true={isDocumentWizardOpen}>
@@ -376,6 +293,4 @@
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
-
-
 </template>

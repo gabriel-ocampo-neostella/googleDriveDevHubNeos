@@ -2,44 +2,36 @@ public with sharing class GoogleDriveService {
     
     @AuraEnabled
     public static GoogleDriveResponse uploadFileToGoogleDriveFolder(String fileName, String mimeType, String base64Content, String folderId) {
-        try {
-            
-            system.debug('uploadFileToGoogleDriveFolder: the folder id is  '+ folderId);
-            system.debug('mimeType: '+mimeType);
-            system.debug('base64Content: '+base64Content);
-            system.debug('fileName: '+fileName);
-            // URL de la API de Google Drive para la subida de archivos
-            String endpoint = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&includeItemsFromAllDrives=true';
-            
-            // Configurar la solicitud HTTP
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(endpoint);
-            req.setMethod('POST');
-            req.setHeader('Authorization', 'Bearer ' +  getAccessTokenJWT()); // Asegúrate de tener un token de acceso válido
-            req.setHeader('Content-Type', 'multipart/related; boundary=foo_bar_baz');
-            
-            // Cuerpo de la solicitud en formato multipart/related
-            String body = '--foo_bar_baz\r\n' +
-                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-                '{"name": "' + fileName + '", "parents": ["' + folderId + '"]}\r\n' +  // Especificar 'parents' para subir a una carpeta específica
-                '--foo_bar_baz\r\n' +
-                'Content-Type: ' + mimeType + '\r\n' +
-                'Content-Transfer-Encoding: base64\r\n\r\n' +
-                base64Content + '\r\n' +
-                '--foo_bar_baz--';
-            req.setBody(body);
-            
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            system.debug('response upload files google drive: ' + res);
-            
-            if (res.getStatusCode() == 200) {
-                return new GoogleDriveResponse(true, 'File uploaded successfully: ' + res.getBody());
-            } else {
-                return new GoogleDriveResponse(false, 'Error uploading file: ' + res.getBody());
-            }
-        } catch (Exception e) {
-            return new GoogleDriveResponse(false, 'Exception: ' + e.getMessage());
+        system.debug('uploadFileToGoogleDriveFolder: the folder id is  '+ folderId);
+        system.debug('mimeType: '+mimeType);
+        system.debug('base64Content: '+base64Content);
+        system.debug('fileName: '+fileName);
+        
+        String endpoint = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&includeItemsFromAllDrives=true';
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(endpoint);
+        req.setMethod('POST');
+        req.setHeader('Authorization', 'Bearer ' +  getAccessTokenJWT()); // Asegúrate de tener un token de acceso válido
+        req.setHeader('Content-Type', 'multipart/related; boundary=foo_bar_baz');
+        
+        String body = '--foo_bar_baz\r\n' +
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+            '{"name": "' + fileName + '", "parents": ["' + folderId + '"]}\r\n' +  // Especificar 'parents' para subir a una carpeta específica
+            '--foo_bar_baz\r\n' +
+            'Content-Type: ' + mimeType + '\r\n' +
+            'Content-Transfer-Encoding: base64\r\n\r\n' +
+            base64Content + '\r\n' +
+            '--foo_bar_baz--';
+        req.setBody(body);
+        
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        system.debug('response upload files google drive: ' + res);
+        
+        if (res.getStatusCode() == 200) {
+            return new GoogleDriveResponse(true, 'File uploaded successfully: ' + res.getBody());
+        } else {
+            return new GoogleDriveResponse(false, 'Error uploading file: ' + res.getBody());
         }
     }
     
@@ -126,6 +118,7 @@ public with sharing class GoogleDriveService {
             }
         } catch (Exception e) {
             system.debug('Error: ' + res);
+            ErrorLoggingService.logApexError(e, 'GoogleDriveService-createGoogleDriveFolder');
             return new GoogleDriveResponse(false, 'Exception: ' + e.getMessage());
         }
     }
@@ -167,9 +160,6 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during token retrieval: ' + e.getMessage());
         }
     }
-    
-    
-    
     
     private static String generateJwtTokenProduction() {
         // Configura los detalles del JWT
@@ -213,6 +203,7 @@ public with sharing class GoogleDriveService {
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveFilesByFolderId(String folderId) {
         try {
+            
             System.debug('GoogleDriveService-listGoogleDriveFilesByFolderId: ' + folderId);
             // Get the access token
             String accessToken = getAccessTokenJWT(); 
@@ -280,7 +271,8 @@ public with sharing class GoogleDriveService {
             }
         } catch (Exception e) {
             System.debug('listGoogleDriveFilesByFolderId: ' + e.getMessage());
-            throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());
+            ErrorLoggingService.logApexError(e, 'GoogleDriveService-listGoogleDriveFilesByFolderId');
+            throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());   
         }
     }
     
@@ -351,9 +343,7 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during Google Drive API call: ' + res.getBody());
         }
     }
-    
-    
-    
+       
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveTemplateswithoutShortcuts(String mimeType) {
         try {
@@ -563,10 +553,40 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());
         }
     }
-
-
+ 
+    @AuraEnabled
+    public static GoogleDriveResponse deleteFileFromGoogleDrive (String fileId) {
+        return new GoogleDriveResponse(true, 'File deleted successfully: ' + null);
+  
+    }
     
-    /*
+    @AuraEnabled
+    public static boolean checkIfFolderIsTrashed(String folderId) {
+        String accessToken = getAccessTokenJWT();
+        // Check the folder's trashed status
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint('https://www.googleapis.com/drive/v3/files/' + folderId + '?fields=trashed&supportsAllDrives=true');
+        req.setMethod('GET');
+        req.setHeader('Authorization', 'Bearer ' + accessToken);
+        
+        Http http = new Http();
+        system.debug('before send oscar');
+        HttpResponse res = http.send(req);
+        system.debug('after send oscar:'+res);
+        
+        if (res.getStatusCode() == 200) {
+            system.debug('checkIfFolderIsTrashed res: '+ res);
+            Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            Boolean isTrashed = (Boolean) jsonResponse.get('trashed');  
+            return isTrashed;
+        } else {
+            System.debug('error checking trashed: ' + res);
+            throw new GoogleDriveException(false, 'Failed to retrieve folder trashed status: ' + res.getStatus());
+        }        
+    }
+    
+    
+     /*
 // Método para generar el JWT
 private static String generateJwtToken(String clientId, String clientSecret) {
 
@@ -633,63 +653,4 @@ System.debug('encodedSignature: ' + encodedSignature);
 
 return encodedHeader + '.' + encodedPayload + '.' + encodedSignature;
 }*/
-    
-    
-    
-    @AuraEnabled
-    public static GoogleDriveResponse deleteFileFromGoogleDrive (String fileId) {
-        return new GoogleDriveResponse(true, 'File deleted successfully: ' + null);
-        
-        /*
-try {
-system.debug('deleteFileFromGoogleDrive : '+ fileId);
-String endpoint = 'https://www.googleapis.com/drive/v3/files/' + fileId;
-HttpRequest req = new HttpRequest();
-req.setEndpoint(endpoint);
-req.setMethod('DELETE');
-req.setHeader('Authorization', 'Bearer ' +getAccessTokenJWT());
-
-Http http = new Http();
-HttpResponse res = http.send(req);
-
-if (res.getStatusCode() == 204) { // 204 No Content indicates success
-return new GoogleDriveResponse(true, 'File deleted successfully.');
-} else {
-// Log response body for debugging purposes
-system.debug('Response Body: ' + res.getBody());
-return new GoogleDriveResponse(false, 'Error deleting file: ' + res.getBody());
-}
-} catch (Exception e) {
-return new GoogleDriveResponse(false, 'Exception: ' + e.getMessage());
-}*/
-    }
-    
-    @AuraEnabled
-    public static boolean checkIfFolderIsTrashed(String folderId) {
-        try {
-            String accessToken = getAccessTokenJWT();
-            
-            // Check the folder's trashed status
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint('https://www.googleapis.com/drive/v3/files/' + folderId + '?fields=trashed&supportsAllDrives=true');
-            req.setMethod('GET');
-            req.setHeader('Authorization', 'Bearer ' + accessToken);
-            
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            
-            if (res.getStatusCode() == 200) {
-                system.debug('checkIfFolderIsTrashed res: '+ res);
-                Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                Boolean isTrashed = (Boolean) jsonResponse.get('trashed');  
-                return isTrashed;
-            } else {
-                System.debug('error checking trashed: ' + res);
-                throw new GoogleDriveException(false, 'Failed to retrieve folder trashed status: ' + res.getStatus());
-            }
-        } catch (Exception e) {
-            System.debug('Error checking if folder is trashed: ' + e.getMessage());
-            throw new GoogleDriveException(false, 'Error checking folder trashed status: ' + e.getMessage());
-        }
-    }
 }
