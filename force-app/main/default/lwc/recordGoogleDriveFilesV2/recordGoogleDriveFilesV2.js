@@ -10,7 +10,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent'; // Importa Sh
 
 
 import customIcons from '@salesforce/resourceUrl/customIcons'; // Import the static resource
-import { logJsError } from 'c/utilities';
 
 
 
