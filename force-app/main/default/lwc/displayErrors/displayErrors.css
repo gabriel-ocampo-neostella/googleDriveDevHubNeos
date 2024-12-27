@@ -1,0 +1,5 @@
+.custom-width {
+    max-width: 800px;
+    /* Ajusta este valor según el ancho deseado */
+    width: 100%;
+}

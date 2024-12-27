@@ -1,7 +1,7 @@
 public class GoogleDriveFolderService {
     
     @AuraEnabled
-    public static void checkIfFolderIsTrashed(String recordId) {
+    public static GoogleDriveResponse checkIfFolderIsTrashed(String recordId) {
         try {
             // Retrieve the folder ID from the custom setting
             Google_Drive_Mapping_Folder__c existingMapping;
@@ -14,13 +14,14 @@ public class GoogleDriveFolderService {
                 ];
             } catch (Exception e) {
                 System.debug('No existing mapping found for recordId: ' + recordId);
-                return; // Exit if no mapping is found
+                return new GoogleDriveResponse(true, ' Exit if no mapping is found');
+              
             }
             
             // If no mapping is found, simply return
             if (existingMapping == null || existingMapping.Google_Drive_Folder_ID__c == null) {
                 System.debug('No mapping found for recordId: ' + recordId);
-                return;
+                 return new GoogleDriveResponse(true, 'No mapping found for recordId: ' + recordId);
             }
             
             String folderId = existingMapping.Google_Drive_Folder_ID__c;
@@ -33,11 +34,12 @@ public class GoogleDriveFolderService {
             if (isTrashed!=null && isTrashed) {
                 delete existingMapping;
                 System.debug('Deleted trashed folder from custom setting for recordId: ' + recordId);
-            }
-            
-        } catch (Exception e) {
-            System.debug('Error checking if folder is trashed: ' + e.getMessage());
-            throw new GoogleDriveException(false, 'Error checking folder trashed status: ' + e.getMessage());
+            }   
+             return new GoogleDriveResponse(true, 'checkIfFolderIsTrashed succesfully');
+        }  
+        catch (Exception e) {
+            ErrorLoggingService.logApexError(e, 'GoogleDriveFolderService-checkIfFolderIsTrashed');
+            return new GoogleDriveResponse(false, e.getMessage());
         }
     }
     
@@ -45,8 +47,7 @@ public class GoogleDriveFolderService {
     @AuraEnabled
     public static Map<String, String> getGoogleDriveFolderId(String recordId) {
         try {
-            System.debug('GoogleDriveFolderService-getGoogleDriveFolderIdV8: ' + recordId);
-            
+            System.debug('GoogleDriveFolderService-getGoogleDriveFolderId: ' + recordId);            
             // Step 1: Check if the record already exists in the custom metadata
             Google_Drive_Mapping_Folder__c existingMapping;
             try {
@@ -433,9 +434,15 @@ public class GoogleDriveFolderService {
                     };
                         return folderDetails;
             
-        } catch (Exception e) {
-            System.debug('Error retrieving or creating Google Drive folder: ' + e.getMessage());
-            throw new GoogleDriveException(false, 'Error retrieving or creating Google Drive folder: ' + e.getMessage());
+        } catch (Exception e) {   
+            
+            ErrorLoggingService.logApexError(e, 'GoogleDriveFolderService-getGoogleDriveFolderId');
+            
+            Map<String, String> folderDetails = new Map<String, String>{
+                'status' => 'false',
+                 'message' => e.getMessage()
+            };
+            return folderDetails; 
         }
     }
     
