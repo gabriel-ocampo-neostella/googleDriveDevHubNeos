@@ -1,14 +1,9 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import { getRecord } from 'lightning/uiRecordApi';
 import createFolderInGoogleDrive from '@salesforce/apex/GoogleDriveService.createFolderInGoogleDrive';       // Import the Apex method
 import listGoogleDriveFilesByFolderId from '@salesforce/apex/GoogleDriveService.listGoogleDriveFilesByFolderId';
 import getGoogleDriveFolderId from '@salesforce/apex/GoogleDriveFolderService.getGoogleDriveFolderId';
 import checkIfFolderIsTrashed from '@salesforce/apex/GoogleDriveFolderService.checkIfFolderIsTrashed';
-
-import uploadFileToGoogleDriveFolder from '@salesforce/apex/GoogleDriveService.uploadFileToGoogleDriveFolder';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent'; // Importa ShowToastEvent
-
-
 import customIcons from '@salesforce/resourceUrl/customIcons'; // Import the static resource
 
 
@@ -96,7 +91,11 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
                     }
                 })
                 .catch((error) => {
-                    this.errorMessages = [...this.errorMessages, 'An unexpected error occurred.'];
+                    let message = 'An unexpected error occurred.';
+                    if (error.body && error.body.message) {
+                        message = error.body.message;
+                    }
+                    this.showToast('Error', message, 'error');
                 });
         } else {
             this.message = 'No record ID provided.';
@@ -162,9 +161,11 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
                 }
             })
             .catch((error) => {
-                this.message = 'Error retrieving Google Drive folder details.';
-                this.errorMessages = [...this.errorMessages, this.message];
-                this.showToast('Error', 'Failed to create folder: ' + (error.body ? error.body.message : error.message), 'error');
+                let message = 'An unexpected error occurred.';
+                if (error.body && error.body.message) {
+                    message = error.body.message;
+                }
+                this.showToast('Error', message, 'error');
             });
     }
 
@@ -187,9 +188,11 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
                 this.updateBreadcrumbs(folderId); // Update breadcrumbs
             })
             .catch((error) => {
-                this.message = 'Error listing Google Drive files.';
-                console.error('Error listing Google Drive files:', error);
-                logJsError(error, 'RecordGoogleDriveFilesV2 - listFilesFromGoogleDrive');
+                let message = 'An unexpected error occurred.';
+                if (error.body && error.body.message) {
+                    message = error.body.message;
+                }
+                this.showToast('Error', message, 'error');
             });
     }
 
@@ -403,8 +406,11 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
                 this.showToast('Error', 'Failed to create folder: ' + createResult.message, 'error');
             }
         } catch (error) {
-            // Handle any errors thrown during the folder creation process
-            this.showToast('Error', 'Failed to create folder: ' + (error.body ? error.body.message : error.message), 'error');
+            let message = 'An unexpected error occurred.';
+            if (error.body && error.body.message) {
+                message = error.body.message;
+            }
+            this.showToast('Error', message, 'error');
         }
     }
 
@@ -463,48 +469,16 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
         }
     }
 
-    async handleUploadFile() {
-        try {
-            // Show upload progress
-            this.uploadProgress = 10; // Start at 10% to indicate upload started
-
-            const folderId = this.folderIdStack[this.folderIdStack.length - 1];
-            console.log('folder id: ' + folderId);
-
-            // Call Apex method to upload the file
-            const result = await uploadFileToGoogleDriveFolder({
-                fileName: this.fileName,
-                mimeType: this.mimeType,
-                base64Content: this.fileContent,
-                folderId: folderId
-            });
-
-            this.uploadProgress = 100; // Set progress to 100% on success
-            this.responseMessage = result.message;
-            this.showToast('Success', 'File uploaded successfully!', 'success');
-
-            // Refresh the file list
-            this.listFilesFromGoogleDrive(folderId);
-            this.closeUploadModal();
-        } catch (error) {
-            this.uploadProgress = 0; // Reset progress on error
-            this.responseMessage = 'Error: ' + (error.body ? error.body.message : error.message);
-            this.showToast('Error', 'Error uploading file', 'error');
-        }
-    }
-
+    // Open the upload modal (calls the method from the child component)
     openUploadModal() {
-        this.isUploadModalOpen = true;
+        this.currentFolderId = this.folderIdStack[this.folderIdStack.length - 1];
+        this.template.querySelector('c-upload-files').openUploadModal();
     }
 
-    closeUploadModal() {
-        this.isUploadModalOpen = false;
-        this.isFileSelected = false;
-        this.uploadProgress = 0;
-        this.fileContent = null;
-        this.fileName = '';
-        this.mimeType = '';
-        this.isUploadDisabled = true;
+    // Handle file uploaded event
+    handleFileUploaded() {
+        // Refresh the file list after a file is uploaded
+        this.listFilesFromGoogleDrive(this.currentFolderId);
     }
 
     // Method to open the DocumentWizard modal
@@ -570,6 +544,7 @@ export default class RecordGoogleDriveFilesV2 extends LightningElement {
                 title: title,
                 message: message,
                 variant: variant,
+                mode: 'sticky' // Mantiene el Toast visible hasta que el usuario lo cierre manualmente
             })
         );
     }

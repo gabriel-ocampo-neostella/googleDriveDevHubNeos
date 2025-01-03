@@ -31,7 +31,8 @@ public with sharing class GoogleDriveService {
         if (res.getStatusCode() == 200) {
             return new GoogleDriveResponse(true, 'File uploaded successfully: ' + res.getBody());
         } else {
-            return new GoogleDriveResponse(false, 'Error uploading file: ' + res.getBody());
+            ErrorLoggingService.logError('Apex','Error','Status code different from 200','GoogleDriveService-uploadFileToGoogleDriveFolder');
+            throw new AuraHandledException('Error uploading file: '+ res.getBody()); 
         }
     }
     
@@ -44,7 +45,6 @@ public with sharing class GoogleDriveService {
     @AuraEnabled
     public static GoogleDriveResponse createGoogleDriveFileFolder(String mimeType, String fileName, String folderId) {
         System.debug('createGoogleDriveFileFolder folder id: ' + folderId);
-        
         try {
             // Define the endpoint for creating a file, including shared drive support parameters
             String endpoint = 'https://www.googleapis.com/drive/v3/files?supportsAllDrives=true&includeItemsFromAllDrives=true';
@@ -85,8 +85,8 @@ public with sharing class GoogleDriveService {
                 return new GoogleDriveResponse(false, 'Error creating file: ' + res.getBody());
             }
         } catch (Exception e) {
-            System.debug('createGoogleDriveFileFolder catch was: ' + e.getMessage());
-            return new GoogleDriveResponse(false, 'Exception: ' + e.getMessage());
+            ErrorLoggingService.logError('Apex','Error',e,'GoogleDriveService-createGoogleDriveFileFolder');
+            throw new AuraHandledException(e.getMessage()); 
         }
     }
     
@@ -117,9 +117,8 @@ public with sharing class GoogleDriveService {
                 return new GoogleDriveResponse(false, 'Error creating folder: ' + res.getBody());
             }
         } catch (Exception e) {
-            system.debug('Error: ' + res);
-            ErrorLoggingService.logApexError(e, 'GoogleDriveService-createGoogleDriveFolder');
-            return new GoogleDriveResponse(false, 'Exception: ' + e.getMessage());
+            ErrorLoggingService.logError('Apex','Error',e,'GoogleDriveService-createGoogleDriveFolder');
+            throw new AuraHandledException(e.getMessage()); 
         }
     }
     
@@ -132,7 +131,6 @@ public with sharing class GoogleDriveService {
             
             System.debug('the jwtToken is: ' + jwtToken);
             
-            // Configura la solicitud HTTP para obtener el token
             HttpRequest req = new HttpRequest();
             req.setEndpoint(tokenUrl);
             req.setMethod('POST');
@@ -157,6 +155,7 @@ public with sharing class GoogleDriveService {
                 throw new CalloutException('Failed to get access token: ' + (res.getBody() != null ? res.getBody() : 'No response body.'));
             }
         } catch (Exception e) {
+            ErrorLoggingService.logError('Apex','Error',e,'GoogleDriveService-getAccessTokenJWT');
             throw new AuraHandledException('Error during token retrieval: ' + e.getMessage());
         }
     }
@@ -202,8 +201,7 @@ public with sharing class GoogleDriveService {
     
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveFilesByFolderId(String folderId) {
-        try {
-            
+        try {    
             System.debug('GoogleDriveService-listGoogleDriveFilesByFolderId: ' + folderId);
             // Get the access token
             String accessToken = getAccessTokenJWT(); 
@@ -271,7 +269,6 @@ public with sharing class GoogleDriveService {
             }
         } catch (Exception e) {
             System.debug('listGoogleDriveFilesByFolderId: ' + e.getMessage());
-            ErrorLoggingService.logApexError(e, 'GoogleDriveService-listGoogleDriveFilesByFolderId');
             throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());   
         }
     }
@@ -279,8 +276,7 @@ public with sharing class GoogleDriveService {
     @AuraEnabled(cacheable=true)
     public static Map<String, String> getFolderDetails(String idFolder) {
         try {
-            System.debug('GoogleDriveFolderService-getFolderDetails: ' + idFolder);
-            
+            System.debug('GoogleDriveFolderService-getFolderDetails: ' + idFolder);    
             // Call the Google Drive API to get the folder details using an HTTP request
             HttpRequest req = new HttpRequest();
             req.setEndpoint('https://www.googleapis.com/drive/v3/files/' + idFolder + '?fields=id,name&supportsAllDrives=true');
@@ -305,23 +301,16 @@ public with sharing class GoogleDriveService {
                 throw new GoogleDriveException(false, 'Failed to retrieve folder details: ' + res.getStatus());
             }
         } catch (Exception e) {
-            System.debug('Error retrieving folder details from Google Drive: ' + e.getMessage());
-            throw new GoogleDriveException(false, 'Error retrieving folder details: ' + e.getMessage());
+             throw new AuraHandledException('Error retrieving folder details: ' + e.getMessage()); 
         }
     }
     
-    
     @AuraEnabled
     public static String cloneFile(String fileId, String newFileName, String parentId) {
-        // Endpoint para clonar archivos de Google Drive
-        //String url = 'https://www.googleapis.com/drive/v3/files/' + fileId + '/copy';
         system.debug('cloneFile fileId: '+fileId);
         String url = 'https://www.googleapis.com/drive/v3/files/' + fileId + '/copy?supportsAllDrives=true&includeItemsFromAllDrives=true';
-        
-        // Crear el body de la petición con el nuevo nombre del archivo y el parentId (carpeta destino)
         String requestBody = '{"name": "' + newFileName + '", "parents": ["' + parentId + '"]}';
         
-        // Hacer la solicitud HTTP POST para clonar el archivo
         HttpRequest req = new HttpRequest();
         req.setEndpoint(url);
         req.setMethod('POST');
@@ -338,19 +327,14 @@ public with sharing class GoogleDriveService {
             Map<String, Object> resultMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
             return (String) resultMap.get('id');  // Devuelve el ID del nuevo archivo
         } else {
-            // Hubo un error en la clonación
-            System.debug('Error al clonar el archivo: ' + res.getBody());
-            throw new AuraHandledException('Error during Google Drive API call: ' + res.getBody());
+            throw new AuraHandledException('Error during cloneFile Google Drive API call: ' + res.getBody());
         }
     }
        
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveTemplateswithoutShortcuts(String mimeType) {
         try {
-            
             String folderId;
-            
-            // Si estamos en un contexto de prueba, usa un folderId predeterminado
             if (Test.isRunningTest()) {
                 folderId = 'sampleFolderId'; // Folder ID de prueba predeterminado
             } else {
@@ -362,9 +346,7 @@ public with sharing class GoogleDriveService {
                 ];
                 folderId = integrationSettings.Root_Folder_Template_ID__c;
             }
-            
-            
-            // Log the folderId for debugging
+                  
             System.debug('GoogleDriveService - Template Folder ID: ' + folderId);
             
             // Get the access token (Assume you already have a method to get JWT token)
@@ -409,75 +391,7 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());
         }
     }
-    
-    @AuraEnabled
-    public static List<Map<String, String>> listGoogleDriveTemplatesOld(String mimeType) {
-        try {
-            String folderId;
-            
-            // If running tests, use a predefined folder ID
-            if (Test.isRunningTest()) {
-                folderId = 'sampleFolderId'; // Default test folder ID
-            } else {
-                // Query the Custom Setting for the folder ID
-                Google_Drive_Integration_Settings__c integrationSettings = [
-                    SELECT Root_Folder_Template_ID__c  
-                    FROM Google_Drive_Integration_Settings__c 
-                    WHERE Name = 'google services account' LIMIT 1
-                ];
-                folderId = integrationSettings.Root_Folder_Template_ID__c;
-            }
-            
-            System.debug('GoogleDriveService - Template Folder ID: ' + folderId);
-            
-            // Get the access token
-            String accessToken = getAccessTokenJWT();
-            
-            // Query to retrieve files and shortcuts
-            String query = '%27' + EncodingUtil.urlEncode(folderId, 'UTF-8') + '%27+in+parents+and+trashed+%3D+false+and+(mimeType+%3D+%27' + mimeType + '%27+or+mimeType+%3D+%27application/vnd.google-apps.shortcut%27)';
-            String filesUrl = 'https://www.googleapis.com/drive/v3/files?q=' + query + '&supportsAllDrives=true&includeItemsFromAllDrives=true&fields=files(id,name,mimeType,shortcutDetails)';
-            
-            HttpRequest req = new HttpRequest();
-            req.setEndpoint(filesUrl);
-            req.setMethod('GET');
-            req.setHeader('Authorization', 'Bearer ' + accessToken);
-            
-            Http http = new Http();
-            HttpResponse res = http.send(req);
-            
-            if (res.getStatusCode() == 200) {
-                // Parse the JSON response
-                Map<String, Object> resultMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                List<Object> files = (List<Object>) resultMap.get('files');
-                
-                List<Map<String, String>> templateFiles = new List<Map<String, String>>();
-                for (Object fileObj : files) {
-                    Map<String, Object> fileMap = (Map<String, Object>) fileObj;
-                    Map<String, String> fileDetail = new Map<String, String>();
-                    
-                    fileDetail.put('id', (String) fileMap.get('id'));
-                    fileDetail.put('name', (String) fileMap.get('name'));
-                    fileDetail.put('mimeType', (String) fileMap.get('mimeType'));
-                    
-                    // If the file is a shortcut, include the targetId
-                    if ('application/vnd.google-apps.shortcut'.equals(fileMap.get('mimeType'))) {
-                        Map<String, Object> shortcutDetails = (Map<String, Object>) fileMap.get('shortcutDetails');
-                        fileDetail.put('targetId', (String) shortcutDetails.get('targetId'));
-                    }
-                    
-                    templateFiles.add(fileDetail);
-                }
-                
-                return templateFiles;
-            } else {
-                throw new CalloutException('Failed to retrieve Google Drive templates: ' + res.getBody());
-            }
-        } catch (Exception e) {
-            System.debug('Error in listGoogleDriveTemplates: ' + e.getMessage());
-            throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());
-        }
-    }
-    
+
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveTemplates(String mimeType) {
         try {
@@ -555,12 +469,6 @@ public with sharing class GoogleDriveService {
     }
  
     @AuraEnabled
-    public static GoogleDriveResponse deleteFileFromGoogleDrive (String fileId) {
-        return new GoogleDriveResponse(true, 'File deleted successfully: ' + null);
-  
-    }
-    
-    @AuraEnabled
     public static boolean checkIfFolderIsTrashed(String folderId) {
         String accessToken = getAccessTokenJWT();
         // Check the folder's trashed status
@@ -580,8 +488,7 @@ public with sharing class GoogleDriveService {
             Boolean isTrashed = (Boolean) jsonResponse.get('trashed');  
             return isTrashed;
         } else {
-            System.debug('error checking trashed: ' + res);
-            throw new GoogleDriveException(false, 'Failed to retrieve folder trashed status: ' + res.getStatus());
+            throw new AuraHandledException('Failed to retrieve folder trashed status: ' + res.getStatus());
         }        
     }
     
