@@ -330,7 +330,7 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during cloneFile Google Drive API call: ' + res.getBody());
         }
     }
-       
+      
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveTemplateswithoutShortcuts(String mimeType) {
         try {
@@ -391,6 +391,8 @@ public with sharing class GoogleDriveService {
             throw new AuraHandledException('Error during Google Drive API call: ' + e.getMessage());
         }
     }
+
+
 
     @AuraEnabled
     public static List<Map<String, String>> listGoogleDriveTemplates(String mimeType) {

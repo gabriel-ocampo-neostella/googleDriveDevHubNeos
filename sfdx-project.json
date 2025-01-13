@@ -2,19 +2,37 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true,
-      "package": "googleDriveIntegration",
+      "package": "salesforceGoogleDrive",
       "versionName": "ver 0.1",
-      "versionNumber": "0.1.0.NEXT"
+      "versionNumber": "0.1.1.NEXT",
+      "default": true,
+      "versionDescription": ""
+    },
+    {
+      "path": "force-app",
+      "package": "salesforceGoogleDriveFinal",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.2.0.0",
+      "default": false,
+      "versionDescription": "nueva version con cambios en test lwc",
+      "ancestorVersion": "HIGHEST"
     }
   ],
-  "name": "googleDriveDevHubNeos",
+  "name": "salesforceGoogleDriveDevHub",
   "namespace": "sfgoogledrive",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "62.0",
   "packageAliases": {
-    "googleDriveIntegration": "0Hoaj0000000IGHCA2",
-    "googleDriveIntegration@0.1.0-2": "04taj0000004urdAAA",
-    "googleDriveIntegration@0.1.0-3": "04taj00000052dtAAA"
+    "salesforceGoogleDrive": "0Hoak0000000NsfCAE",
+    "salesforceGoogleDrive@0.1.0-1": "04tak0000005Ih3AAE",
+    "salesforceGoogleDrive@0.1.0-2": "04tak0000005IifAAE",
+    "salesforceGoogleDriveFinal": "0Hoak0000000NvtCAE",
+    "salesforceGoogleDriveFinal@0.1.0-1": "04tak0000005IkHAAU",
+    "salesforceGoogleDriveFinal@0.1.0-2": "04tak0000005ItxAAE",
+    "salesforceGoogleDriveFinal@0.1.0-5": "04tak0000005KJ3AAM",
+    "salesforceGoogleDriveFinal@0.1.0-6": "04tak0000005KULAA2",
+    "salesforceGoogleDriveFinal@0.1.0-7": "04tak0000005KVxAAM",
+    "salesforceGoogleDriveFinal@0.1.0-8": "04tak0000005KXZAA2",
+    "salesforceGoogleDriveFinal@0.2.0": "04tak0000005KcPAAU"
   }
 }

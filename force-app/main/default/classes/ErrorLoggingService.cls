@@ -21,8 +21,5 @@ public with sharing class ErrorLoggingService {
             sfgoogledrive__Component_Context__c = componentContext
         );
         EventBus.publish(errorEvent); 
-    }
-    
-    
-   
+    }  
 }

@@ -1,18 +1,18 @@
 public class GoogleDriveFolderService {
-    
-    @AuraEnabled
+     
+     @AuraEnabled
     public static GoogleDriveResponse checkIfFolderIsTrashed(String recordId) {
         try {
             
-            if (recordId.contains('001Ei00000TrczKIAR')) {
-                throw new GoogleDriveException('This is a Demo Error');
+            if (recordId.contains('001E100000kIKh5IAG')) {
+                throw new GoogleDriveException(false,'This is a Demo Error');
             }
             // Retrieve the folder ID from the custom setting
-            Google_Drive_Mapping_Folder__c existingMapping;
+            Drive_Mapping_Folder__c existingMapping;
             try {
                 existingMapping = [
                     SELECT Google_Drive_Folder_ID__c
-                    FROM Google_Drive_Mapping_Folder__c
+                    FROM Drive_Mapping_Folder__c
                     WHERE Salesforce_Object_ID__c = :recordId
                     LIMIT 1
                 ];
@@ -53,11 +53,11 @@ public class GoogleDriveFolderService {
         try {
             System.debug('GoogleDriveFolderService-getGoogleDriveFolderId: ' + recordId);            
             // Step 1: Check if the record already exists in the custom metadata
-            Google_Drive_Mapping_Folder__c existingMapping;
+            Drive_Mapping_Folder__c existingMapping;
             try {
                 existingMapping = [
                     SELECT Google_Drive_Folder_ID__c 
-                    FROM Google_Drive_Mapping_Folder__c 
+                    FROM Drive_Mapping_Folder__c 
                     WHERE Salesforce_Object_ID__c = :recordId LIMIT 1
                 ];
             } catch (Exception e) {
@@ -77,10 +77,10 @@ public class GoogleDriveFolderService {
             System.debug('Object Name determined: ' + objectName);
             
             // Query the metadata for this object
-            Google_Drive_Mapping_Folder__c metadataRecord = [
+            Drive_Mapping_Folder__c metadataRecord = [
                 SELECT Object_Name__c, Parent_Field__c, Google_Drive_Folder_ID__c, Root_Folder_Name__c, 
                 Sub_Folder_Ids__c, Sub_Folder_Name__c, Folder_Drive_Id_Without_Parent__c, Folder_Drive_Name_Without_Parent__c
-                FROM Google_Drive_Mapping_Folder__c 
+                FROM Drive_Mapping_Folder__c 
                 WHERE Object_Name__c = :objectName LIMIT 1
             ];
             
@@ -99,7 +99,7 @@ public class GoogleDriveFolderService {
             Boolean newSubFolderCreated = false;
             Boolean updateParentTypeMetadata = false;
             Boolean insertParentMetadata = false;
-            Google_Drive_Mapping_Folder__c parentMetadataRecord = null;
+            Drive_Mapping_Folder__c parentMetadataRecord = null;
             String parentRecordFolderId = null;
             String parentId = null; // Declare parentId here at a higher scope.
             
@@ -110,7 +110,7 @@ public class GoogleDriveFolderService {
             // Step 3: Check if the object has a parent or is a root folder
             String parentField = metadataRecord.Parent_Field__c;
             
-            Google_Drive_Mapping_Folder__c parentTypeMetadataRecord = null;
+            Drive_Mapping_Folder__c parentTypeMetadataRecord = null;
             
             
             
@@ -203,7 +203,7 @@ public class GoogleDriveFolderService {
                     try {
                         parentMetadataRecord = [
                             SELECT Google_Drive_Folder_ID__c, Sub_Folder_Ids__c 
-                            FROM Google_Drive_Mapping_Folder__c 
+                            FROM Drive_Mapping_Folder__c 
                             WHERE Salesforce_Object_ID__c = :parentId LIMIT 1
                         ];
                     } catch (Exception e) {
@@ -220,7 +220,7 @@ public class GoogleDriveFolderService {
                         // Look for metadata based on the parent object type
                         parentTypeMetadataRecord = [
                             SELECT Google_Drive_Folder_ID__c 
-                            FROM Google_Drive_Mapping_Folder__c 
+                            FROM Drive_Mapping_Folder__c 
                             WHERE Object_Name__c = :parentObjectName LIMIT 1
                         ];
                         
@@ -270,7 +270,7 @@ public class GoogleDriveFolderService {
                                     parentRecordFolderId = (String) parentRecordFolderJsonResponseMap.get('id');
                                     System.debug('Subfolder created for parent record in Google Drive with ID: ' + parentRecordFolderId);
                                     
-                                    parentMetadataRecord= new Google_Drive_Mapping_Folder__c(
+                                    parentMetadataRecord= new Drive_Mapping_Folder__c(
                                         Name = parentId,
                                         Salesforce_Object_ID__c = parentId,
                                         Google_Drive_Folder_ID__c = parentRecordFolderId
@@ -305,7 +305,7 @@ public class GoogleDriveFolderService {
                                 parentRecordFolderId = (String) parentRecordFolderJsonResponseMap.get('id');
                                 System.debug('Subfolder created for parent record in Google Drive with ID: ' + parentRecordFolderId);
                                 
-                                parentMetadataRecord= new Google_Drive_Mapping_Folder__c(
+                                parentMetadataRecord= new Drive_Mapping_Folder__c(
                                     Name = parentId,
                                     Salesforce_Object_ID__c = parentId,
                                     Google_Drive_Folder_ID__c = parentRecordFolderId
@@ -388,7 +388,7 @@ public class GoogleDriveFolderService {
             }
             if (newSubFolderCreated) {
                 system.debug('the newSubFolderId into test is:  '+newSubFolderId);
-                Google_Drive_Mapping_Folder__c newMapping = new Google_Drive_Mapping_Folder__c(
+                Drive_Mapping_Folder__c newMapping = new Drive_Mapping_Folder__c(
                     Name = recordId,
                     Salesforce_Object_ID__c = recordId,
                     Google_Drive_Folder_ID__c = newSubFolderId

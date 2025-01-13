@@ -93,7 +93,7 @@ export default class UploadFiles extends LightningElement {
             });
 
             this.uploadProgress = 100;
-            this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'File uploaded successfully!', variant: 'success' }));
+            this.dispatchEvent(new ShowToastEvent({ title: 'Success', message: 'File uploaded successfully!', variant: 'success', mode: 'sticky' }));
 
             this.closeUploadModal();
 
