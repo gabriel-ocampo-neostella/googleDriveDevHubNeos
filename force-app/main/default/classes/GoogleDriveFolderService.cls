@@ -1,27 +1,31 @@
 public class GoogleDriveFolderService {
-    
-    @AuraEnabled
+     
+     @AuraEnabled
     public static GoogleDriveResponse checkIfFolderIsTrashed(String recordId) {
         try {
+            
+            if (recordId.contains('001E100000kIKh5IAG')) {
+                throw new GoogleDriveException(false,'This is a Demo Error');
+            }
             // Retrieve the folder ID from the custom setting
-            Google_Drive_Mapping_Folder__c existingMapping;
+            Drive_Mapping_Folder__c existingMapping;
             try {
                 existingMapping = [
                     SELECT Google_Drive_Folder_ID__c
-                    FROM Google_Drive_Mapping_Folder__c
+                    FROM Drive_Mapping_Folder__c
                     WHERE Salesforce_Object_ID__c = :recordId
                     LIMIT 1
                 ];
             } catch (Exception e) {
                 System.debug('No existing mapping found for recordId: ' + recordId);
                 return new GoogleDriveResponse(true, ' Exit if no mapping is found');
-              
+                
             }
             
             // If no mapping is found, simply return
             if (existingMapping == null || existingMapping.Google_Drive_Folder_ID__c == null) {
                 System.debug('No mapping found for recordId: ' + recordId);
-                 return new GoogleDriveResponse(true, 'No mapping found for recordId: ' + recordId);
+                return new GoogleDriveResponse(true, 'No mapping found for recordId: ' + recordId);
             }
             
             String folderId = existingMapping.Google_Drive_Folder_ID__c;
@@ -35,11 +39,11 @@ public class GoogleDriveFolderService {
                 delete existingMapping;
                 System.debug('Deleted trashed folder from custom setting for recordId: ' + recordId);
             }   
-             return new GoogleDriveResponse(true, 'checkIfFolderIsTrashed succesfully');
+            return new GoogleDriveResponse(true, 'checkIfFolderIsTrashed succesfully');
         }  
         catch (Exception e) {
-            ErrorLoggingService.logApexError(e, 'GoogleDriveFolderService-checkIfFolderIsTrashed');
-            return new GoogleDriveResponse(false, e.getMessage());
+            ErrorLoggingService.logError('Apex','Error',e,'GoogleDriveFolderService-checkIfFolderIsTrashed');
+            throw new AuraHandledException(e.getMessage()); 
         }
     }
     
@@ -49,11 +53,11 @@ public class GoogleDriveFolderService {
         try {
             System.debug('GoogleDriveFolderService-getGoogleDriveFolderId: ' + recordId);            
             // Step 1: Check if the record already exists in the custom metadata
-            Google_Drive_Mapping_Folder__c existingMapping;
+            Drive_Mapping_Folder__c existingMapping;
             try {
                 existingMapping = [
                     SELECT Google_Drive_Folder_ID__c 
-                    FROM Google_Drive_Mapping_Folder__c 
+                    FROM Drive_Mapping_Folder__c 
                     WHERE Salesforce_Object_ID__c = :recordId LIMIT 1
                 ];
             } catch (Exception e) {
@@ -73,10 +77,10 @@ public class GoogleDriveFolderService {
             System.debug('Object Name determined: ' + objectName);
             
             // Query the metadata for this object
-            Google_Drive_Mapping_Folder__c metadataRecord = [
+            Drive_Mapping_Folder__c metadataRecord = [
                 SELECT Object_Name__c, Parent_Field__c, Google_Drive_Folder_ID__c, Root_Folder_Name__c, 
                 Sub_Folder_Ids__c, Sub_Folder_Name__c, Folder_Drive_Id_Without_Parent__c, Folder_Drive_Name_Without_Parent__c
-                FROM Google_Drive_Mapping_Folder__c 
+                FROM Drive_Mapping_Folder__c 
                 WHERE Object_Name__c = :objectName LIMIT 1
             ];
             
@@ -95,7 +99,7 @@ public class GoogleDriveFolderService {
             Boolean newSubFolderCreated = false;
             Boolean updateParentTypeMetadata = false;
             Boolean insertParentMetadata = false;
-            Google_Drive_Mapping_Folder__c parentMetadataRecord = null;
+            Drive_Mapping_Folder__c parentMetadataRecord = null;
             String parentRecordFolderId = null;
             String parentId = null; // Declare parentId here at a higher scope.
             
@@ -106,7 +110,7 @@ public class GoogleDriveFolderService {
             // Step 3: Check if the object has a parent or is a root folder
             String parentField = metadataRecord.Parent_Field__c;
             
-            Google_Drive_Mapping_Folder__c parentTypeMetadataRecord = null;
+            Drive_Mapping_Folder__c parentTypeMetadataRecord = null;
             
             
             
@@ -199,7 +203,7 @@ public class GoogleDriveFolderService {
                     try {
                         parentMetadataRecord = [
                             SELECT Google_Drive_Folder_ID__c, Sub_Folder_Ids__c 
-                            FROM Google_Drive_Mapping_Folder__c 
+                            FROM Drive_Mapping_Folder__c 
                             WHERE Salesforce_Object_ID__c = :parentId LIMIT 1
                         ];
                     } catch (Exception e) {
@@ -216,7 +220,7 @@ public class GoogleDriveFolderService {
                         // Look for metadata based on the parent object type
                         parentTypeMetadataRecord = [
                             SELECT Google_Drive_Folder_ID__c 
-                            FROM Google_Drive_Mapping_Folder__c 
+                            FROM Drive_Mapping_Folder__c 
                             WHERE Object_Name__c = :parentObjectName LIMIT 1
                         ];
                         
@@ -266,7 +270,7 @@ public class GoogleDriveFolderService {
                                     parentRecordFolderId = (String) parentRecordFolderJsonResponseMap.get('id');
                                     System.debug('Subfolder created for parent record in Google Drive with ID: ' + parentRecordFolderId);
                                     
-                                    parentMetadataRecord= new Google_Drive_Mapping_Folder__c(
+                                    parentMetadataRecord= new Drive_Mapping_Folder__c(
                                         Name = parentId,
                                         Salesforce_Object_ID__c = parentId,
                                         Google_Drive_Folder_ID__c = parentRecordFolderId
@@ -301,7 +305,7 @@ public class GoogleDriveFolderService {
                                 parentRecordFolderId = (String) parentRecordFolderJsonResponseMap.get('id');
                                 System.debug('Subfolder created for parent record in Google Drive with ID: ' + parentRecordFolderId);
                                 
-                                parentMetadataRecord= new Google_Drive_Mapping_Folder__c(
+                                parentMetadataRecord= new Drive_Mapping_Folder__c(
                                     Name = parentId,
                                     Salesforce_Object_ID__c = parentId,
                                     Google_Drive_Folder_ID__c = parentRecordFolderId
@@ -330,9 +334,7 @@ public class GoogleDriveFolderService {
                             subFolderIds.put(key, (String) deserializedMap.get(key));
                         }
                     }
-                    
-                    
-                    
+                        
                     if (subFolderIds.containsKey(objectName)) {
                         parentFolderId = subFolderIds.get(objectName);
                         System.debug('Subfolder for ' + objectName + ' already exists under parent with ID: ' + parentFolderId);
@@ -367,7 +369,6 @@ public class GoogleDriveFolderService {
             } catch (Exception e) {
                 throw new GoogleDriveException(false, 'Failed to retrieve the Name field for the record: ' + e.getMessage());
             }
-            
             createSubFolderResponse = GoogleDriveService.createGoogleDriveFolder(recordName, parentFolderId);
             
             if (createSubFolderResponse.status) {
@@ -378,10 +379,6 @@ public class GoogleDriveFolderService {
             } else {
                 throw new GoogleDriveException(false, 'Failed to create subfolder for the record.');
             }
-            
-            
-            System.debug('start to update custom metadata: ');
-            
             System.debug('isNewRootFolder: '+ isNewRootFolder);
             System.debug('updateMetadataRecord: '+ updateMetadataRecord);
             // Step 9: Perform all DML updates at the end
@@ -389,44 +386,34 @@ public class GoogleDriveFolderService {
                 update metadataRecord;
                 System.debug('Updated metadata with new root folder ID: ' + parentFolderId);
             }
-            
-            
-            
             if (newSubFolderCreated) {
                 system.debug('the newSubFolderId into test is:  '+newSubFolderId);
-                Google_Drive_Mapping_Folder__c newMapping = new Google_Drive_Mapping_Folder__c(
+                Drive_Mapping_Folder__c newMapping = new Drive_Mapping_Folder__c(
                     Name = recordId,
                     Salesforce_Object_ID__c = recordId,
                     Google_Drive_Folder_ID__c = newSubFolderId
                 );
                 insert newMapping;
                 System.debug('New mapping created for recordId: ' + recordId + ' with Google Drive Folder ID: ' + newSubFolderId);
-            }
-            
-            System.debug('updateParentMetadataRecord: '+ updateParentMetadataRecord);
-            
+            }        
+            System.debug('updateParentMetadataRecord: '+ updateParentMetadataRecord);           
             System.debug('insertParentMetadata: '+ insertParentMetadata);
             
             if (updateParentMetadataRecord && !insertParentMetadata) {
                 update parentMetadataRecord;
                 System.debug('Updated parent metadata with new subfolder ID for object: ' + objectName);
             }
-            
             system.debug('updateParentTypeMetadata: '+ parentTypeMetadataRecord);
             
             if (updateParentTypeMetadata) {
                 update parentTypeMetadataRecord;
                 System.debug('Updated parent type metadata with new folder ID.');
-            }
-            
-            
-            
+            }  
             if (insertParentMetadata && parentId != null) {
                 
                 insert parentMetadataRecord;
                 System.debug('Inserted new parent metadata with Google Drive Folder ID: ' + parentRecordFolderId);
-            }
-            
+            } 
             // Step 10: Return the folder details
             Map<String, String> folderDetails = new Map<String, String>{
                 'idFolder' => newSubFolderId,
@@ -435,19 +422,13 @@ public class GoogleDriveFolderService {
                         return folderDetails;
             
         } catch (Exception e) {   
-            
-            ErrorLoggingService.logApexError(e, 'GoogleDriveFolderService-getGoogleDriveFolderId');
-            
-            Map<String, String> folderDetails = new Map<String, String>{
-                'status' => 'false',
-                 'message' => e.getMessage()
-            };
-            return folderDetails; 
+            ErrorLoggingService.logError('Apex','Error',e,'GoogleDriveFolderService-getGoogleDriveFolderId');
+            throw new AuraHandledException(e.getMessage()); 
         }
     }
     
     // Helper function to process placeholders in Sub_Folder_Name__c
-    public static String processPlaceholders(String subFolderNameTemplate, String parentId) {
+    private static String processPlaceholders(String subFolderNameTemplate, String parentId) {
         Pattern placeholderPattern = Pattern.compile('\\{(.*?)\\}');
         Matcher matcher = placeholderPattern.matcher(subFolderNameTemplate);
         
@@ -456,35 +437,26 @@ public class GoogleDriveFolderService {
         
         while (matcher.find()) {
             String placeholder = matcher.group(1); // e.g., param_1_drive__c
-            
-            try {
-                // Dynamically get the value for this placeholder from the parent record
-                String dynamicFieldValue = getDynamicFieldValue(parentId, placeholder);
-                System.debug('Dynamic field value for ' + placeholder + ': ' + dynamicFieldValue);
-                system.debug('place holder is: '+ placeholder);
-                System.debug('finalSubFolderName ' + finalSubFolderName);
-                // Ensure parentheses around the dynamic field value
-                String fieldValueWithParentheses = '(' + dynamicFieldValue + ')';
-                System.debug('fieldValueWithParentheses: ' + fieldValueWithParentheses);
-                // Replace the placeholder with the field value
-                finalSubFolderName = finalSubFolderName.replace('{' + placeholder + '}', fieldValueWithParentheses);
-            } catch (Exception e) {
-                throw new GoogleDriveException(false, 'Error fetching value for field ' + placeholder + ': ' + e.getMessage());
-            }
+            // Dynamically get the value for this placeholder from the parent record
+            String dynamicFieldValue = getDynamicFieldValue(parentId, placeholder);
+            System.debug('Dynamic field value for ' + placeholder + ': ' + dynamicFieldValue);
+            system.debug('place holder is: '+ placeholder);
+            System.debug('finalSubFolderName ' + finalSubFolderName);
+            // Ensure parentheses around the dynamic field value
+            String fieldValueWithParentheses = '(' + dynamicFieldValue + ')';
+            System.debug('fieldValueWithParentheses: ' + fieldValueWithParentheses);
+            // Replace the placeholder with the field value
+            finalSubFolderName = finalSubFolderName.replace('{' + placeholder + '}', fieldValueWithParentheses);        
         }
-        system.debug('el valor devuelto es: '+finalSubFolderName);
         return finalSubFolderName;
     }
     
     // Helper method to fetch dynamic field values
-    public static String getDynamicFieldValue(Id recordId, String fieldName) {
+    private static String getDynamicFieldValue(Id recordId, String fieldName) {
         SObjectType objType = Id.valueOf(recordId).getSObjectType();
-        DescribeSObjectResult objDescribe = objType.getDescribe();
-        
+        DescribeSObjectResult objDescribe = objType.getDescribe(); 
         String query = 'SELECT ' + fieldName + ' FROM ' + objDescribe.getName() + ' WHERE Id = :recordId LIMIT 1';
         SObject record = Database.query(query);
-        
         return (String) record.get(fieldName);
     }
-    
 }
