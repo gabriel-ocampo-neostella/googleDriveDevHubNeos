@@ -12,7 +12,7 @@
       "path": "force-app",
       "package": "salesforceGoogleDriveFinal",
       "versionName": "ver 0.1",
-      "versionNumber": "0.2.0.0",
+      "versionNumber": "0.3.0.0",
       "default": false,
       "versionDescription": "nueva version con cambios en test lwc",
       "ancestorVersion": "HIGHEST"
@@ -33,6 +33,7 @@
     "salesforceGoogleDriveFinal@0.1.0-6": "04tak0000005KULAA2",
     "salesforceGoogleDriveFinal@0.1.0-7": "04tak0000005KVxAAM",
     "salesforceGoogleDriveFinal@0.1.0-8": "04tak0000005KXZAA2",
-    "salesforceGoogleDriveFinal@0.2.0": "04tak0000005KcPAAU"
+    "salesforceGoogleDriveFinal@0.2.0": "04tak0000005KcPAAU",
+    "salesforceGoogleDriveFinal@0.3.0": "04tak0000005KnhAAE"
   }
 }
